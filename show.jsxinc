@@ -1,0 +1,5 @@
+var Xrd = {
+	show: function(){
+		alert(app.activeDocument.fullName);
+	}
+};
