@@ -53,6 +53,19 @@ if (typeof Wayan === 'undefined'){
         return new File( root.fullName + '/' + targetPath + '/' + targetBasename );
     };
 
+    convert.getBundledTargetFor = function(source, root, bundle){
+        if (bundle.length < 2){
+            return this.getTargetFor(source, root);
+        }
+
+        /* looking up - drive is skipped */
+        var bundlePart = 'bundle-' + bundle[0].name.replace(/\.[^\.]+$/, ''),
+            paths = [], 
+            targetBasename = source.name.replace(/\.[^\.]+$/, '.jpg'),
+            targetPath = source.parent.fullName.replace(/\/[^\/]+\/?/, '');
+        return new File( root.fullName + '/' + targetPath + '/' + bundlePart + '/' + targetBasename );
+    };
+
     convert.makeTargetDir = function(dir){
         return dir.exists 
             || (dir.parent && this.makeTargetDir(dir.parent) && dir.create()); 
@@ -66,7 +79,7 @@ if (typeof Wayan === 'undefined'){
         }
     };
 
-    convert.convertSelectionsToPhotoshop = function(root){
+    convert.convertSelectionsToPhotoshopUngrouped = function(root){
 		var files = Wayan.List.flatMap(
             function(f){ return f.spec instanceof File? [f.spec]: []; },
             app.document.selections
@@ -79,6 +92,54 @@ if (typeof Wayan === 'undefined'){
                         + ");";
             },
             files
+       );
+       var body = "#include 'Wayan/Convert.jsx'\n"
+       + Wayan.List.join( "\n", commands);
+
+        var btMsg = new BridgeTalk();
+	    // Photoshop is the target
+	    btMsg.target = "photoshop";
+	    // The string containing the script is the body
+	    btMsg.body = body;
+	    // Bridge handles any errors  that occur when sending the initial message
+	    btMsg.onError = function( errorMsg ) {
+		    retval = false; 
+		    $.writeln(eObj.body); 
+	    };
+        btMsg.onResult = function( resultMsg ) {
+            $.writeln("In Bridge - result of sending initial message to Photoshop = " + resultMsg.body);
+        };
+	    btMsg.send();
+    };
+
+    /* each bundle has its own directory, named bundle-FIRSTNAME */
+    convert.convertSelectionsToPhotoshop = function(root){
+       // return this.convertSelectionsToPhotoshopUngrouped(root);
+        var self = this, 
+            commands = Wayan.List.flatMap(
+            function(g){
+                var files = Wayan.List.flatMap(
+                    function(t){ return t.spec instanceof File? [ t.spec ]: []; },
+                    g
+                );
+                return Wayan.List.flatMap(
+                    function(source){
+                        var target = self.getBundledTargetFor(source, root, files), targetDir = target.parent;
+                        if (self.makeTargetDir(targetDir)){
+                            return [ 
+                                'Wayan.Convert.convert('
+                                    + Wayan.Util.dumpFile(source) + ',' + Wayan.Util.dumpFile(target)
+                                    + ");"
+                                ];
+                        }
+                        else {
+                            return [];
+                        }
+                    },
+                    files,
+                );
+            },
+            app.document.groupedSelections
        );
        var body = "#include 'Wayan/Convert.jsx'\n"
        + Wayan.List.join( "\n", commands);
