@@ -62,7 +62,7 @@ if (typeof Wayan === 'undefined'){
         var bundlePart = 'bundle-' + bundle[0].name.replace(/\.[^\.]+$/, ''),
             paths = [], 
             targetBasename = source.name.replace(/\.[^\.]+$/, '.jpg'),
-            targetPath = source.parent.fullName.replace(/\/[^\/]+\/?/, '');
+            targetPath = source.parent.fullName.replace(/^\/?/, '');
         return new File( root.fullName + '/' + targetPath + '/' + bundlePart + '/' + targetBasename );
     };
 
