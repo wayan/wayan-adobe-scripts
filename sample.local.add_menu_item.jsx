@@ -28,7 +28,6 @@ if (convertedPhotoRoot){
             // Define the behavior (what happens when the item is selected)
             var txt = m.text;
             // Display result as UI, as this is UI sample
-            alert("'" + txt + "' was chosen menu item");
             Wayan.Convert.convertSelectionsToPhotoshop(new Folder(convertedPhotoRoot));
         }
     );

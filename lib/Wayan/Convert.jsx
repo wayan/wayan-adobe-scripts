@@ -46,10 +46,10 @@ if (typeof Wayan === 'undefined'){
     }
 
     convert.getTargetFor = function(source, root){
-        /* looking up - drive is skipped year */
+        /* looking up - drive is not skipped */
         var paths = [], 
             targetBasename = source.name.replace(/\.[^\.]+$/, '.jpg'),
-            targetPath = source.parent.fullName.replace(/\/[^\/]+\/?/, '');
+            targetPath = source.parent.fullName.replace(/^\/?/, '');
         return new File( root.fullName + '/' + targetPath + '/' + targetBasename );
     };
 
